@@ -43,6 +43,8 @@ jobs:
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-path
           pod --version
+      - name: Resolve missing locked dependencies
+        run: flutter pub get
       - name: Build unsigned device IPA
         run: python3 scripts/build_ios.py ${{ matrix.arguments }}
       - uses: actions/upload-artifact@v4
