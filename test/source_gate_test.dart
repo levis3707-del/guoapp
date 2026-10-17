@@ -58,6 +58,44 @@ void main() {
     expect(store.sources.length, allSourcesEnabled ? 11 : 1);
   });
 
+  test('configuration reload preserves an unchanged source unlock', () async {
+    final store = await create();
+    await store.enableSourceGate('666');
+    store.lockSources();
+    await store.unlockSources('666');
+    for (var i = 0; i < 3; i++) {
+      await store.reload();
+      expect(store.sourcesUnlocked, isTrue);
+      expect(store.sources.length, allSourcesEnabled ? 11 : 1);
+    }
+    if (allSourcesEnabled) {
+      await store.setCatalogSource('yeguo', allSources: false);
+      expect(store.allowsSource('yeguo'), isTrue);
+    }
+  });
+
+  test('configuration reload does not unlock a locked source gate', () async {
+    final store = await create();
+    await store.enableSourceGate('666');
+    store.lockSources();
+    await store.reload();
+    expect(store.sourcesUnlocked, isFalse);
+    expect(store.allowsSource('yeguo'), isFalse);
+  });
+
+  test('configuration reload clears unlock after a password change', () async {
+    final store = await create();
+    await store.enableSourceGate('666');
+    final other = testStore(store.preferences);
+    addTearDown(other.dispose);
+    await other.enableSourceGate('777');
+    await store.reload();
+    expect(store.sourcesUnlocked, isFalse);
+    await expectLater(store.unlockSources('666'), throwsStateError);
+    await store.unlockSources('777');
+    expect(store.sourcesUnlocked, isTrue);
+  });
+
   test('a saved gate hides sources again after restart', () async {
     final store = await create();
     await store.enableSourceGate('666');

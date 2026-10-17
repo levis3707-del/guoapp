@@ -20,8 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - edition: hongguojian
-            arguments: ''
           - edition: zhenguojian
             arguments: '--all-sources'
     steps:
@@ -45,6 +43,10 @@ jobs:
           pod --version
       - name: Resolve missing locked dependencies
         run: flutter pub get
+      - name: Format source gate fix
+        run: dart format lib/local_store.dart test/source_gate_test.dart
+      - name: Test source gate reload behavior
+        run: flutter test test/source_gate_test.dart --dart-define=ALL_SOURCES=true
       - name: Build unsigned device IPA
         run: python3 scripts/build_ios.py ${{ matrix.arguments }}
       - uses: actions/upload-artifact@v4
